@@ -18,7 +18,24 @@
 .guide-caption { font-size: 11px; color: #becab5; margin: 6px 0; }
 </style>
 <header><div><div class="eyebrow">AI Director / Source collection</div><h1>Visual Library</h1></div><span class="badge">Private imports · Browser workspace</span></header>
-<main><section><div class="eyebrow">01 / Choose your references</div><h2>Every scene starts with a source.</h2><p>Select a character, then add your outfit, pose and location images. Click a selected card again to inspect it.</p><label class="upload">Load private character library<input id="loadCharacter" type="file" accept="application/json"></label><p class="hint">Choose your private character library file on this device. Use Restore library to load your wardrobe, poses and saved scene.</p><nav id="tabs" aria-label="Reference categories"></nav><div class="toolbar"><span id="count"></span><label class="upload" id="importLabel">+ Add images<input id="files" type="file" accept="image/png,image/jpeg,image/webp" multiple></label></div><div id="gallery" class="grid"></div><h2>Master identity references</h2><p id="hierarchy"></p><div id="identity" class="grid"></div></section>
+<main><section><div class="eyebrow">01 / Choose your references</div><h2>Every scene starts with a source.</h2><p>Select a character, then add your outfit, pose and location images. Click a selected card again to inspect it.</p><label class="upload">Load private character library<input id="loadCharacter" type="file" accept="application/json"></label><p class="hint">Choose your private character library file on this device. Use Restore library to load your wardrobe, poses and saved scene.</p><nav id="tabs" aria-label="Reference categories"></nav><div class="toolbar"><span id="count"></span><label class="upload" id="importLabel">+ Add images<input id="files" type="file" accept="image/png,image/jpeg,image/webp" multiple></label></div><div id="gallery" class="grid"></div><h2>Master identity references</h2><p id="hierarchy"></p><div id="identity" class="grid"></div><fieldset class="scene-view">
+<legend>Face emotion</legend>
+<label for="faceEmotion">Expression</label>
+<select id="faceEmotion">
+<option value="">Automatic</option>
+<option>Neutral</option><option>Happy</option><option>Gentle smile</option>
+<option>Laughing</option><option>Surprised</option><option>Sad</option>
+<option>Angry</option><option>Afraid</option><option>Confused</option>
+<option>Confident</option><option>Thoughtful</option><option>Determined</option>
+</select>
+<label for="emotionNotes">Expression details</label>
+<textarea id="emotionNotes" placeholder="Optional details, such as raised eyebrows and a slight smile"></textarea>
+<label class="upload">+ Upload expression reference
+<input id="emotionUpload" type="file" accept="image/png,image/jpeg,image/webp">
+</label>
+<div id="emotionReference"></div>
+<p class="hint">The uploaded image guides facial expression. The character’s original face reference controls her identity.</p>
+</fieldset></section>
 <aside><div class="eyebrow">02 / Scene board</div><h2>Selected references</h2><div id="selections"></div><p class="hint">Face authority: A → B → C. Clothing in the body reference is flexible. Wardrobe instructions have not been imported.</p><fieldset class="scene-view">
 <legend>Angle / View</legend>
 <label for="characterView">Character view</label>
@@ -49,24 +66,7 @@
 <div id="cameraAngleGuides" class="guide-grid" aria-label="Illustrated camera angles"></div>
 <p class="hint">Left and right refer to the character’s own sides. Automatic leaves the choice to the scene direction.</p>
 </fieldset>
-<fieldset class="scene-view">
-<legend>Face emotion</legend>
-<label for="faceEmotion">Expression</label>
-<select id="faceEmotion">
-<option value="">Automatic</option>
-<option>Neutral</option><option>Happy</option><option>Gentle smile</option>
-<option>Laughing</option><option>Surprised</option><option>Sad</option>
-<option>Angry</option><option>Afraid</option><option>Confused</option>
-<option>Confident</option><option>Thoughtful</option><option>Determined</option>
-</select>
-<label for="emotionNotes">Expression details</label>
-<textarea id="emotionNotes" placeholder="Optional details, such as raised eyebrows and a slight smile"></textarea>
-<label class="upload">+ Upload expression reference
-<input id="emotionUpload" type="file" accept="image/png,image/jpeg,image/webp">
-</label>
-<div id="emotionReference"></div>
-<p class="hint">The uploaded image guides facial expression. The character’s original face reference controls her identity.</p>
-</fieldset>
+
 <label for="notes">Scene direction</label><p class="hint">Optional action, expression, camera or lighting.</p><textarea id="notes" placeholder="Describe your scene…"></textarea><button class="primary" id="export">Export scene + reference images</button><button id="save">Back up library</button><label class="upload" style="display:block;text-align:center;margin-top:12px">Restore library<input id="restore" type="file" accept="application/json"></label><p id="status" role="status" aria-live="polite"></p><p class="hint">Generation is not connected. Export contains the actual selected image data and original identity instructions. Imported images stay in this open session; use Back up library before closing.</p></aside></main>
 <footer>Original source ZIPs remain unchanged. Reference guidance requires visual review of generated results.</footer><dialog id="preview"><button id="close">Close preview</button><h2 id="previewTitle"></h2><img id="previewImage" alt=""></dialog>
 <dialog id="exportDialog"><h2>Your export is ready</h2><p id="exportInfo"></p><p>Choose Save as to select a folder, or Download to use your browser’s download location (usually Downloads).</p><button id="saveAs">Save as…</button> <a id="downloadLink" style="color:#d0e3a8">Download file</a> <button id="closeExport">Close</button><p id="exportFeedback" role="status"></p><details><summary>Download not working? Copy the file contents</summary><p>Copy this text into a text editor and save it using the filename above.</p><button id="copyExport">Copy contents</button><textarea id="exportText" readonly style="height:160px" aria-label="Exported JSON file contents"></textarea></details></dialog>
