@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Director · Visual Library</title>
+<style>
+:root{font-family:Inter,Segoe UI,sans-serif;color:#eeeae2;background:#151917;color-scheme:dark}*{box-sizing:border-box}body{margin:0}header{padding:25px 4%;border-bottom:1px solid #3b423a;display:flex;align-items:center;justify-content:space-between}h1{font:normal 30px Georgia;margin:5px 0}.eyebrow{color:#bdca9e;letter-spacing:2px;font-size:11px;text-transform:uppercase}.badge{background:#303b2e;padding:9px 14px;border-radius:20px;color:#d3dfb7;font-size:12px}main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:32px;padding:30px 4%}h2{font:normal 24px Georgia}p{color:#b3bcb1;line-height:1.5;font-size:14px}button,.upload{border:1px solid #55604f;background:#293126;color:#eeeae2;padding:11px 15px;border-radius:7px;cursor:pointer;font:inherit;font-size:13px}button:hover,.upload:hover{background:#3b4934}button:focus-visible,.upload:focus-within{outline:3px solid #c5dc9c}nav{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}nav button[aria-pressed=true]{background:#ccdda7;color:#1d2718}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:16px}.card{padding:0;text-align:left;background:#212821;overflow:hidden;position:relative}.card img{width:100%;height:235px;object-fit:contain;background:#101510;display:block}.card strong,.card small{display:block;padding:12px 12px 0}.card small{padding:6px 12px 14px;color:#b8c4ae}.card.selected{outline:2px solid #c6db9d}.toolbar{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:20px}.empty{border:1px dashed #5c6855;padding:50px 25px;text-align:center;border-radius:12px;color:#b5c0ac}.upload input{position:absolute;width:1px;height:1px;opacity:0}aside{background:#20271f;border:1px solid #3c4736;border-radius:12px;padding:22px;align-self:start}.slot{display:flex;gap:12px;align-items:center;border-bottom:1px solid #3c4736;padding:13px 0}.slot img{width:56px;height:68px;object-fit:contain;background:#121811;border-radius:5px}.slot span{font-size:13px;overflow-wrap:anywhere}.slot small{display:block;color:#acbaa0;margin:5px 0}.slot button{margin-left:auto;padding:5px}textarea{width:100%;min-height:90px;background:#131a12;color:#eee;border:1px solid #59654f;border-radius:6px;padding:12px;font:inherit}aside>button{width:100%;margin-top:12px}.primary{background:#ccdda7;color:#1d2718}#status{font-size:13px;min-height:20px;color:#d1ddb9}.hint{font-size:12px}dialog{background:#1c231b;color:#eee;border:1px solid #66765a;border-radius:10px;max-width:90vw}dialog img{max-width:78vw;max-height:75vh;display:block}dialog::backdrop{background:#000b}footer{padding:20px 4%;font-size:12px;color:#aeb9a7}@media(max-width:850px){main{grid-template-columns:1fr}aside{order:-1}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}header{gap:15px}.badge{display:none}}
+
+.scene-view { margin: 20px 0; padding: 15px; border: 1px solid #59654f; border-radius: 8px; }
+.scene-view legend { padding: 0 6px; font-size: 16px; }
+.scene-view label { display: block; margin: 10px 0 6px; font-size: 13px; }
+.scene-view select { width: 100%; padding: 10px; border: 1px solid #59654f; border-radius: 6px; background: #131a12; color: #eee; font: inherit; font-size: 13px; }
+.scene-view select:focus-visible { outline: 3px solid #c5dc9c; }
+
+.guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+.guide-option { padding: 8px; background: #182017; text-align: center; min-width: 0; }
+.guide-option[aria-pressed="true"] { border-color: #d3e8aa; outline: 2px solid #d3e8aa; background: #33412b; }
+.guide-option img { display: block; width: 100%; height: 100px; object-fit: contain; }
+.guide-option span { display: block; font-size: 11px; line-height: 1.4; margin-top: 4px; }
+.guide-caption { font-size: 11px; color: #becab5; margin: 6px 0; }
+</style>
+<header><div><div class="eyebrow">AI Director / Source collection</div><h1>Visual Library</h1></div><span class="badge">Private imports · Browser workspace</span></header>
+<main><section><div class="eyebrow">01 / Choose your references</div><h2>Every scene starts with a source.</h2><p>Select a character, then add your outfit, pose and location images. Click a selected card again to inspect it.</p><label class="upload">Load private character library<input id="loadCharacter" type="file" accept="application/json"></label><p class="hint">Choose your private character library file on this device. Use Restore library to load your wardrobe, poses and saved scene.</p><nav id="tabs" aria-label="Reference categories"></nav><div class="toolbar"><span id="count"></span><label class="upload" id="importLabel">+ Add images<input id="files" type="file" accept="image/png,image/jpeg,image/webp" multiple></label></div><div id="gallery" class="grid"></div><h2>Master identity references</h2><p id="hierarchy"></p><div id="identity" class="grid"></div></section>
+<aside><div class="eyebrow">02 / Scene board</div><h2>Selected references</h2><div id="selections"></div><p class="hint">Face authority: A → B → C. Clothing in the body reference is flexible. Wardrobe instructions have not been imported.</p><fieldset class="scene-view">
+<legend>Angle / View</legend>
+<label for="characterView">Character view</label>
+<select id="characterView">
+<option value="">Automatic</option>
+<option value="Front view">Front view</option>
+<option value="Three-quarter front view from the character’s left">Three-quarter front · left side</option>
+<option value="Three-quarter front view from the character’s right">Three-quarter front · right side</option>
+<option value="Left profile">Left profile</option>
+<option value="Right profile">Right profile</option>
+<option value="Rear view">Rear view</option>
+<option value="Three-quarter rear view from the character’s left">Three-quarter rear · left side</option>
+<option value="Three-quarter rear view from the character’s right">Three-quarter rear · right side</option>
+</select>
+<p class="guide-caption">Top view. The nose points toward FRONT. The camera icon shows where you stand.</p>
+<div id="characterViewGuides" class="guide-grid" aria-label="Illustrated character views"></div>
+<label for="cameraAngle">Camera angle</label>
+<select id="cameraAngle">
+<option value="">Automatic</option>
+<option value="Eye-level camera">Eye level</option>
+<option value="High-angle camera looking down">High angle · looking down</option>
+<option value="Low-angle camera looking up">Low angle · looking up</option>
+<option value="Overhead camera looking straight down">Overhead · straight down</option>
+<option value="Ground-level camera">Ground level</option>
+<option value="Dutch-angle camera with a tilted horizon">Dutch angle · tilted horizon</option>
+</select>
+<p class="guide-caption">Side view. The camera and sight line show its height and direction. Dutch angle tilts the frame.</p>
+<div id="cameraAngleGuides" class="guide-grid" aria-label="Illustrated camera angles"></div>
+<p class="hint">Left and right refer to the character’s own sides. Automatic leaves the choice to the scene direction.</p>
+</fieldset>
+<fieldset class="scene-view">
+<legend>Face emotion</legend>
+<label for="faceEmotion">Expression</label>
+<select id="faceEmotion">
+<option value="">Automatic</option>
+<option>Neutral</option><option>Happy</option><option>Gentle smile</option>
+<option>Laughing</option><option>Surprised</option><option>Sad</option>
+<option>Angry</option><option>Afraid</option><option>Confused</option>
+<option>Confident</option><option>Thoughtful</option><option>Determined</option>
+</select>
+<label for="emotionNotes">Expression details</label>
+<textarea id="emotionNotes" placeholder="Optional details, such as raised eyebrows and a slight smile"></textarea>
+<label class="upload">+ Upload expression reference
+<input id="emotionUpload" type="file" accept="image/png,image/jpeg,image/webp">
+</label>
+<div id="emotionReference"></div>
+<p class="hint">The uploaded image guides facial expression. The character’s original face reference controls her identity.</p>
+</fieldset>
+<label for="notes">Scene direction</label><p class="hint">Optional action, expression, camera or lighting.</p><textarea id="notes" placeholder="Describe your scene…"></textarea><button class="primary" id="export">Export scene + reference images</button><button id="save">Back up library</button><label class="upload" style="display:block;text-align:center;margin-top:12px">Restore library<input id="restore" type="file" accept="application/json"></label><p id="status" role="status" aria-live="polite"></p><p class="hint">Generation is not connected. Export contains the actual selected image data and original identity instructions. Imported images stay in this open session; use Back up library before closing.</p></aside></main>
+<footer>Original source ZIPs remain unchanged. Reference guidance requires visual review of generated results.</footer><dialog id="preview"><button id="close">Close preview</button><h2 id="previewTitle"></h2><img id="previewImage" alt=""></dialog>
+<dialog id="exportDialog"><h2>Your export is ready</h2><p id="exportInfo"></p><p>Choose Save as to select a folder, or Download to use your browser’s download location (usually Downloads).</p><button id="saveAs">Save as…</button> <a id="downloadLink" style="color:#d0e3a8">Download file</a> <button id="closeExport">Close</button><p id="exportFeedback" role="status"></p><details><summary>Download not working? Copy the file contents</summary><p>Copy this text into a text editor and save it using the filename above.</p><button id="copyExport">Copy contents</button><textarea id="exportText" readonly style="height:160px" aria-label="Exported JSON file contents"></textarea></details></dialog>
+<script>
+let catalog={"character": {"name": "Load a character library", "character_id": ""}, "references": [], "master_prompt": "", "face_lock": ""};
+const kinds=['Characters','Wardrobe','Poses','Backgrounds'];
+const assets=Object.fromEntries(kinds.map(k=>[k,[]]));
+const selected={}; let active='Characters';
+
+const $=id=>document.getElementById(id);
+function status(t){$('status').textContent=t}
+// Guides show camera position independently of the character's pose.
+const viewPositions = {
+    'Front view': [70, 23],
+    'Three-quarter front view from the character’s left': [25, 32],
+    'Three-quarter front view from the character’s right': [115, 32],
+    'Left profile': [18, 66],
+    'Right profile': [122, 66],
+    'Rear view': [70, 106],
+    'Three-quarter rear view from the character’s left': [25, 101],
+    'Three-quarter rear view from the character’s right': [115, 101]
+};
+const anglePositions = {
+    'Eye-level camera': [25, 44],
+    'High-angle camera looking down': [25, 20],
+    'Low-angle camera looking up': [25, 83],
+    'Overhead camera looking straight down': [93, 13],
+    'Ground-level camera': [25, 105]
+};
+const guideButtons = { characterView: [], cameraAngle: [] };
+function guideSvg(field, value) {
+    const camera = (x, y) => `<g transform="translate(${x} ${y})" fill="#cce4a5" stroke="#cce4a5"><rect x="-9" y="-6" width="15" height="12" rx="2"/><path d="M6 -4 L12 -7 L12 7 L6 4 Z"/></g>`;
+    const sightLine = (x, y, targetX, targetY) => `<path d="M${x} ${y} L${targetX} ${targetY}" stroke="#cce4a5" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow)"/>`;
+    const automatic = `<circle cx="70" cy="60" r="29" fill="none" stroke="#a5b69a" stroke-dasharray="4 5"/><text x="70" y="73" text-anchor="middle" font-size="40" fill="#d0dfbd">?</text><text x="70" y="111" text-anchor="middle" font-size="10" fill="#c0cbb6">Scene decides</text>`;
+    let drawing = automatic;
+    if (field === 'characterView' && value) {
+        const [x, y] = viewPositions[value];
+        drawing = `<text x="70" y="10" text-anchor="middle" fill="#c0cbb6" font-size="9">FRONT</text>
+            <ellipse cx="70" cy="70" rx="27" ry="10" fill="#65745e"/>
+            <circle cx="70" cy="64" r="15" fill="#a9b99b"/>
+            <path d="M65 51 L70 43 L75 51" fill="#dce8d0"/>
+            <text x="70" y="91" text-anchor="middle" font-size="8" fill="#b9c7ad">BACK</text>
+            <text x="31" y="80" fill="#b9c7ad" font-size="9">L</text>
+            <text x="104" y="80" fill="#b9c7ad" font-size="9">R</text>
+            ${sightLine(x, y, 70, 64)}${camera(x, y)}`;
+    }
+    if (field === 'cameraAngle' && value) {
+        const person = `<circle cx="93" cy="44" r="10" fill="#acba9c"/><path d="M93 55 L93 84 M76 66 L110 66 M93 84 L81 108 M93 84 L105 108" fill="none" stroke="#acba9c" stroke-width="5" stroke-linecap="round"/>`;
+        if (value === 'Dutch-angle camera with a tilted horizon') {
+            drawing = `<g transform="rotate(-17 70 62)"><rect x="20" y="22" width="100" height="83" rx="4" fill="none" stroke="#cce4a5" stroke-width="2"/><path d="M20 76 H120" stroke="#829477" stroke-dasharray="4 3"/><g transform="translate(-23 -7)">${person}</g></g>`;
+        } else {
+            const [x, y] = anglePositions[value];
+            drawing = `<path d="M12 115 H128" stroke="#65745e" stroke-width="2"/>${person}${sightLine(x, y, 93, 44)}${camera(x, y)}`;
+        }
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 125"><defs><marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L8 4 L0 8" fill="#cce4a5"/></marker></defs>${drawing}</svg>`;
+}
+function syncViewGuides() {
+    for (const field of ['characterView', 'cameraAngle']) {
+        for (const { button, value } of guideButtons[field]) {
+            button.setAttribute('aria-pressed', String($(field).value === value));
+        }
+    }
+}
+function initializeViewGuides() {
+    for (const field of ['characterView', 'cameraAngle']) {
+        const container = $(field + 'Guides');
+        for (const option of Array.from($(field).options)) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'guide-option';
+            button.setAttribute('aria-label', option.textContent);
+            const image = new Image();
+            image.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(guideSvg(field, option.value));
+            image.alt = option.textContent + (field === 'characterView' ? ' camera position, seen from above' : ' camera height and direction');
+            const label = document.createElement('span');
+            label.textContent = option.textContent;
+            button.append(image, label);
+            button.onclick = () => {
+                $(field).value = option.value;
+                syncViewGuides();
+            };
+            container.append(button);
+            guideButtons[field].push({ button, value: option.value });
+        }
+        $(field).onchange = syncViewGuides;
+    }
+    syncViewGuides();
+}
+initializeViewGuides();
+let emotionReference = null;
+function faceEmotion() {
+    return {
+        expression: $('faceEmotion').value,
+        details: $('emotionNotes').value,
+        reference: emotionReference
+    };
+}
+function renderEmotionReference() {
+    const container = $('emotionReference');
+    container.replaceChildren();
+    if (!emotionReference) return;
+    const reference = emotionReference;
+    container.append(card(reference, () => preview(reference)));
+    const remove = document.createElement('button');
+    remove.textContent = 'Remove expression reference';
+    remove.onclick = () => {
+        emotionReference = null;
+        renderEmotionReference();
+    };
+    container.append(remove);
+}
+function faceEmotionPrompt() {
+    const emotion = faceEmotion();
+    const instructions = [];
+    if (emotion.expression) instructions.push('Expression: ' + emotion.expression);
+    if (emotion.details.trim()) instructions.push('Expression details: ' + emotion.details.trim());
+    if (emotion.reference) {
+        instructions.push('Use the Face emotion image for expression only. Preserve the character’s original identity from reference A.');
+    }
+    return instructions.length ? '\n\nFACE EMOTION\n' + instructions.join('\n') : '';
+}
+async function validateFaceEmotion(saved) {
+    if (!saved) return { expression: '', details: '', reference: null };
+    const expression = Array.from($('faceEmotion').options).some(option => option.value === saved.expression)
+        ? saved.expression : '';
+    const reference = saved.reference || null;
+    if (reference) {
+        if (typeof reference.name !== 'string' || typeof reference.src !== 'string'
+            || !/^data:image\/(png|jpeg|webp);base64,/.test(reference.src)
+            || reference.src.length > 28 * 1024 * 1024) {
+            throw Error('Invalid face emotion reference');
+        }
+        await decode(reference.src);
+    }
+    return { expression, details: typeof saved.details === 'string' ? saved.details : '', reference };
+}
+$('emotionUpload').onchange = async event => {
+    const input = event.target;
+    const file = input.files[0];
+    if (!file) return;
+    try {
+        if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 20 * 1024 * 1024) {
+            throw Error('Use PNG, JPEG or WebP under 20 MB');
+        }
+        const src = await data(file);
+        await decode(src);
+        emotionReference = { name: file.name, src, detail: 'Expression reference · click to preview' };
+        renderEmotionReference();
+        status('Expression reference added. Back up your library to keep it.');
+    } catch (error) {
+        status('Expression upload failed: ' + error.message);
+    }
+    input.value = '';
+};
+function sceneView() {
+    return {
+        character_view: $('characterView').value,
+        camera_angle: $('cameraAngle').value
+    };
+}
+function restoreSceneView(saved = {}) {
+    for (const [field, key] of [['characterView', 'character_view'], ['cameraAngle', 'camera_angle']]) {
+        const control = $(field);
+        const value = saved?.[key];
+        control.value = Array.from(control.options).some(option => option.value === value) ? value : '';
+    }
+    syncViewGuides();
+}
+function sceneViewPrompt() {
+    const view = sceneView();
+    const instructions = [];
+    if (view.character_view) instructions.push('Character view: ' + view.character_view);
+    if (view.camera_angle) instructions.push('Camera angle: ' + view.camera_angle);
+    if (!instructions.length) return '';
+    return '\n\nANGLE / VIEW\n' + instructions.join('\n')
+        + '\nApply these explicit view selections to the composition. Left and right refer to the character’s own sides. Preserve reference A facial identity at the chosen angle.';
+}
+
+function preview(a){$('previewTitle').textContent=a.name;$('previewImage').src=a.src;$('previewImage').alt=a.name;$('preview').showModal()}
+function card(a,action,isSelected=false){const b=document.createElement('button');b.className='card'+(isSelected?' selected':'');b.setAttribute('aria-pressed',String(isSelected));const i=new Image();i.src=a.src;i.alt=a.name;const s=document.createElement('strong');s.textContent=a.name;const d=document.createElement('small');d.textContent=a.detail||'Click to select · click again to preview';b.append(i,s,d);b.onclick=action;return b}
+function render(){ $('tabs').replaceChildren();kinds.forEach(k=>{const b=document.createElement('button');b.textContent=k;b.setAttribute('aria-pressed',String(k===active));b.onclick=()=>{active=k;render()};$('tabs').append(b)});$('count').textContent=assets[active].length+' '+active.toLowerCase();$('importLabel').hidden=active==='Characters';$('gallery').replaceChildren();assets[active].forEach(a=>$('gallery').append(card(a,()=>{if(selected[active]===a.id)preview(a);else{selected[active]=a.id;render()}},selected[active]===a.id)));if(!assets[active].length){const e=document.createElement('div');e.className='empty';e.textContent='Your '+active.toLowerCase()+' collection is ready for images. Add PNG, JPEG or WebP files above.';$('gallery').append(e)}$('selections').replaceChildren();kinds.slice(0,4).forEach(k=>{const a=assets[k].find(x=>x.id===selected[k]);const row=document.createElement('div');row.className='slot';if(a){const im=new Image();im.src=a.src;im.alt=a.name;row.append(im)}const t=document.createElement('span');const sm=document.createElement('small');sm.textContent=k;t.append(sm,document.createTextNode(a?a.name:'Nothing selected'));row.append(t);if(a){const b=document.createElement('button');b.textContent='×';b.setAttribute('aria-label','Clear '+k);b.onclick=()=>{delete selected[k];render()};row.append(b)}$('selections').append(row)})}
+function renderCharacter() {
+    assets.Characters = [{id: catalog.character.character_id, name: catalog.character.name, src: originals[0]}];
+    $('hierarchy').textContent = catalog.character.name + ' · ' + catalog.character.character_id + ' · A: face / B: body / C: orientation';
+    $('identity').replaceChildren();
+    catalog.references.forEach((reference, index) => {
+        const asset = {name: reference.role, src: originals[index], detail: 'Inspect original reference'};
+        $('identity').append(card(asset, () => preview(asset)));
+    });
+    delete selected.Characters;
+    render();
+}
+$('loadCharacter').onchange = async event => {
+    try {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (file.size > 100 * 1024 * 1024) throw Error('Character library exceeds 100 MB');
+        const library = JSON.parse(await file.text());
+        const source = library.catalog;
+        if (library.format !== 'ai-director-character-v1' || !source?.character?.character_id
+            || !Array.isArray(source.references) || source.references.length !== 3
+            || typeof source.master_prompt !== 'string' || typeof source.face_lock !== 'string'
+            || !Array.isArray(library.originals) || library.originals.length !== 3) {
+            throw Error('Choose a valid character library file');
+        }
+        for (const image of library.originals) {
+            if (typeof image !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(image)) throw Error('Invalid reference image');
+            await decode(image);
+        }
+        catalog = source;
+        originals = library.originals;
+        renderCharacter();
+        status('Character loaded privately in this browser session.');
+    } catch (error) {
+        status('Character import failed: ' + error.message);
+    }
+    event.target.value = '';
+};
+$('close').onclick=()=>$('preview').close();
+function data(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}
+function decode(src){return new Promise((resolve,reject)=>{const im=new Image();im.onload=resolve;im.onerror=()=>reject(Error('Image cannot be decoded'));im.src=src})}
+$('files').onchange=async e=>{const kind=active;let added=0;for(const f of e.target.files){try{if(!['image/png','image/jpeg','image/webp'].includes(f.type)||f.size>20*1024*1024)throw Error('Use PNG, JPEG or WebP under 20 MB');const src=await data(f);await decode(src);assets[kind].push({id:crypto.randomUUID(),name:f.name,src});added++}catch(err){status(f.name+': '+err.message);e.target.value='';render();return}}e.target.value='';status(added+' image(s) added. Back up your library to keep them.');render()};
+let exportUrl=null,exportBlob=null,exportName='';
+function download(name,obj){if(exportUrl)URL.revokeObjectURL(exportUrl);const text=JSON.stringify(obj,null,2);exportBlob=new Blob([text],{type:'application/json'});exportName=name;exportUrl=URL.createObjectURL(exportBlob);$('downloadLink').href=exportUrl;$('downloadLink').download=name;$('exportText').value=text;$('exportInfo').textContent=name+' · '+(exportBlob.size/1024/1024).toFixed(1)+' MB';$('exportFeedback').textContent='File prepared. Choose a save option below.';$('saveAs').hidden=typeof window.showSaveFilePicker!=='function';$('exportDialog').showModal()}
+$('closeExport').onclick=()=>$('exportDialog').close();
+$('downloadLink').onclick=()=>{$('exportFeedback').textContent='Download requested. Check your browser’s downloads. If no file appears, use Copy contents below.'};
+$('saveAs').onclick=async()=>{try{const handle=await window.showSaveFilePicker({suggestedName:exportName,types:[{description:'Scene / library JSON',accept:{'application/json':['.json']}}]});const writable=await handle.createWritable();await writable.write(exportBlob);await writable.close();$('exportFeedback').textContent='Saved '+exportName+' to the location you selected.'}catch(e){$('exportFeedback').textContent=e.name==='AbortError'?'Save cancelled. Your export is still ready.':'Save failed: '+e.message+'. Try Download or Copy contents.'}};
+$('copyExport').onclick=async()=>{try{await navigator.clipboard.writeText($('exportText').value);$('exportFeedback').textContent='Copied. Paste into a text editor and save as '+exportName}catch(e){$('exportText').focus();$('exportText').select();$('exportFeedback').textContent='Text selected. Press Ctrl+C, then paste into a text editor and save as '+exportName}};
+
+// Original images are embedded at build time so exports also work when opened directly from disk.
+let originals=[];
+async function bundle(){return structuredClone(assets)}
+$('save').onclick=async()=>{download('ai-director-library.json',{format:'ai-director-library-v1',assets:await bundle(),selected,notes:$('notes').value,view:sceneView(),face_emotion:faceEmotion()});status('Library backup ready. Choose where to save it in the export window.')};
+$('restore').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>150*1024*1024)throw Error('Backup exceeds 150 MB');const b=JSON.parse(await f.text());if(b.format!=='ai-director-library-v1')throw Error('Unrecognized backup');for(const k of kinds.slice(1)){if(!Array.isArray(b.assets[k]))throw Error('Missing '+k);for(const a of b.assets[k]){if(typeof a.name!=='string'||typeof a.id!=='string'||typeof a.src!=='string'||!/^data:image\/(png|jpeg|webp);base64,/.test(a.src))throw Error('Invalid image');await decode(a.src)}}const restoredEmotion=await validateFaceEmotion(b.face_emotion);for(const k of kinds.slice(1))assets[k]=b.assets[k];for(const k of kinds)delete selected[k];for(const k of kinds){if(assets[k].some(a=>a.id===b.selected?.[k]))selected[k]=b.selected[k]}$('notes').value=typeof b.notes==='string'?b.notes:'';restoreSceneView(b.view);$('faceEmotion').value=restoredEmotion.expression;$('emotionNotes').value=restoredEmotion.details;emotionReference=restoredEmotion.reference;renderEmotionReference();render();status('Library restored.')}catch(err){status('Restore failed: '+err.message)}e.target.value=''};
+$('export').onclick=()=>{if(!selected.Characters || !originals.length){status('Load and select your character first.');return}const images=catalog.references.map((r,i)=>({...r,data_url:originals[i]}));for(const k of kinds.slice(1,4)){const a=assets[k].find(a=>a.id===selected[k]);if(a)images.push({role:k,name:a.name,data_url:a.src})}if(emotionReference)images.push({role:'Face emotion',name:emotionReference.name,data_url:emotionReference.src});const prompt=catalog.master_prompt+'\n\n'+catalog.face_lock.replace('[CHARACTER_NAME]',catalog.character.name).replace('[CHARACTER_ID]',catalog.character.character_id).replace(/\[(LOCATION|OUTFIT|ACTION|EXPRESSION|HAIRSTYLE|LIGHTING|CAMERA|ASPECT_RATIO|NOTES)\]/g,'See selected reference images and user scene direction; otherwise unspecified')+'\n\nUSER SCENE DIRECTION\n'+($('notes').value||'No additional scene direction supplied.')+sceneViewPrompt()+faceEmotionPrompt()+'\n\nSELECTED VISUAL REFERENCES\n'+images.map(a=>a.role+': '+a.name).join('\n');download('scene-'+catalog.character.character_id+'.json',{format:'ai-director-scene-v1',character:catalog.character,master_prompt:catalog.master_prompt,prompt,images,view:sceneView(),face_emotion:faceEmotion(),generation_status:'NOT_RUN',identity_review:'QA_PENDING'});status('Scene file ready. Choose where to save it in the export window. No generation has run.')};
+render();
+</script></html>
