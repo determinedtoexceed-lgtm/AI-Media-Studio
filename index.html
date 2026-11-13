@@ -18,7 +18,7 @@
 .guide-caption { font-size: 11px; color: #becab5; margin: 6px 0; }
 </style>
 <header><div><div class="eyebrow">AI Director / Source collection</div><h1>Visual Library</h1></div><span class="badge">Private imports · Browser workspace</span></header>
-<main><section><div class="eyebrow">01 / Choose your references</div><h2>Every scene starts with a source.</h2><p>Select a character, then add your outfit, pose and location images. Click a selected card again to inspect it.</p><label class="upload">Load private character library<input id="loadCharacter" type="file" accept="application/json"></label><p class="hint">Choose your private character library file on this device. Use Restore library to load your wardrobe, poses and saved scene.</p><nav id="tabs" aria-label="Reference categories"></nav><div class="toolbar"><span id="count"></span><label class="upload" id="importLabel">+ Add images<input id="files" type="file" accept="image/png,image/jpeg,image/webp" multiple></label></div><p id="clothingLibraryInfo" class="hint" hidden>Online clothing library. <a href="https://github.com/determinedtoexceed-lgtm/AI-Media-Studio/tree/main/clothing" target="_blank" rel="noopener" style="color:#d0e3a8">Manage clothing folder on GitHub</a>. Add images there and list them in catalog.json for permanent availability. Add images above imports privately for this session.</p><div id="gallery" class="grid"></div><h2>Master identity references</h2><p id="hierarchy"></p><div id="identity" class="grid"></div><fieldset class="scene-view">
+<main><section><div class="eyebrow">01 / Choose your references</div><h2>Every scene starts with a source.</h2><p>Select a character, then add your outfit, pose and location images. Click a selected card again to inspect it.</p><label class="upload">Load private character library<input id="loadCharacter" type="file" accept="application/json"></label><p class="hint">Choose your private character library file on this device. Use Restore library to load your wardrobe, poses and saved scene.</p><nav id="tabs" aria-label="Reference categories"></nav><div class="toolbar"><span id="count"></span><label class="upload" id="importLabel">+ Add images<input id="files" type="file" accept="image/png,image/jpeg,image/webp" multiple></label></div><p id="clothingLibraryInfo" class="hint" hidden>Online clothing library. <a href="https://github.com/determinedtoexceed-lgtm/AI-Media-Studio/tree/main/clothing" target="_blank" rel="noopener" style="color:#d0e3a8">Manage clothing folder on GitHub</a>. Upload images directly into that folder for permanent availability. Add images above imports privately for this session. <button id="refreshClothing" type="button">Refresh online clothing</button></p><div id="gallery" class="grid"></div><h2>Master identity references</h2><p id="hierarchy"></p><div id="identity" class="grid"></div><fieldset class="scene-view">
 <legend>Face emotion</legend>
 <label for="faceEmotion">Expression</label>
 <select id="faceEmotion">
@@ -305,23 +305,42 @@ $('restore').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.
 $('export').onclick=()=>{if(!selected.Characters || !originals.length){status('Load and select your character first.');return}const images=catalog.references.map((r,i)=>({...r,data_url:originals[i]}));for(const k of kinds.slice(1,4)){const a=assets[k].find(a=>a.id===selected[k]);if(a)images.push({role:k,name:a.name,data_url:a.src})}if(emotionReference)images.push({role:'Face emotion',name:emotionReference.name,data_url:emotionReference.src});const prompt=catalog.master_prompt+'\n\n'+catalog.face_lock.replace('[CHARACTER_NAME]',catalog.character.name).replace('[CHARACTER_ID]',catalog.character.character_id).replace(/\[(LOCATION|OUTFIT|ACTION|EXPRESSION|HAIRSTYLE|LIGHTING|CAMERA|ASPECT_RATIO|NOTES)\]/g,'See selected reference images and user scene direction; otherwise unspecified')+'\n\nUSER SCENE DIRECTION\n'+($('notes').value||'No additional scene direction supplied.')+sceneViewPrompt()+faceEmotionPrompt()+'\n\nSELECTED VISUAL REFERENCES\n'+images.map(a=>a.role+': '+a.name).join('\n');download('scene-'+catalog.character.character_id+'.json',{format:'ai-director-scene-v1',character:catalog.character,master_prompt:catalog.master_prompt,prompt,images,view:sceneView(),face_emotion:faceEmotion(),generation_status:'NOT_RUN',identity_review:'QA_PENDING'});status('Scene file ready. Choose where to save it in the export window. No generation has run.')};
 render();
 
+let clothingLoading = false;
 async function loadOnlineClothing() {
+    if (clothingLoading) return;
+    clothingLoading = true;
+    $('refreshClothing').disabled = true;
     try {
         const response = await fetch('clothing/catalog.json', { cache: 'no-cache' });
         if (!response.ok) throw Error('Clothing catalog could not be loaded');
         const catalog = await response.json();
         if (!Array.isArray(catalog.items)) throw Error('Invalid clothing catalog');
+        const items = [...catalog.items];
+        try {
+            const folderResponse = await fetch('https://api.github.com/repos/determinedtoexceed-lgtm/AI-Media-Studio/contents/clothing?ref=main', { cache: 'no-cache' });
+            if (!folderResponse.ok) throw Error('Folder listing unavailable');
+            const files = await folderResponse.json();
+            if (!Array.isArray(files)) throw Error('Invalid folder listing');
+            for (const file of files) {
+                if (file.type === 'file' && /\.(png|jpe?g|webp)$/i.test(file.name)
+                    && !items.some(item => item.file === file.name)) {
+                    items.push({ name: file.name.replace(/\.[^.]+$/, '').replace(/[_-]/g, ' '), file: file.name });
+                }
+            }
+        } catch (error) {
+            if (!items.length) throw Error('Folder listing unavailable. Please try Refresh online clothing later.');
+        }
         let failed = 0;
-        for (const item of catalog.items) {
+        for (const item of items) {
             try {
                 if (typeof item.name !== 'string' || typeof item.file !== 'string'
-                    || !/^[a-zA-Z0-9][a-zA-Z0-9 _./-]*\.(png|jpe?g|webp)$/i.test(item.file)
+                    || !/\.(png|jpe?g|webp)$/i.test(item.file) || /[\\?#:]/.test(item.file) || item.file.startsWith('/')
                     || item.file.split('/').includes('..')) {
                     throw Error('Invalid clothing entry');
                 }
                 const id = 'online-clothing:' + item.file;
                 if (assets.Wardrobe.some(asset => asset.id === id)) continue;
-                const imageResponse = await fetch('clothing/' + encodeURI(item.file));
+                const imageResponse = await fetch('clothing/' + item.file.split('/').map(encodeURIComponent).join('/'));
                 if (!imageResponse.ok) throw Error('Clothing image unavailable');
                 const blob = await imageResponse.blob();
                 if (blob.size > 20 * 1024 * 1024) throw Error('Clothing image exceeds 20 MB');
@@ -333,11 +352,15 @@ async function loadOnlineClothing() {
             }
         }
         render();
-        if (failed) status(failed + ' online clothing image(s) could not be loaded. Check the clothing catalog.');
+        status(failed ? failed + ' online clothing image(s) could not be loaded.' : 'Online clothing is up to date.');
     } catch (error) {
         status('Online clothing unavailable: ' + error.message + '. You can still add images from your device.');
+    } finally {
+        clothingLoading = false;
+        $('refreshClothing').disabled = false;
     }
 }
+$('refreshClothing').onclick = loadOnlineClothing;
 loadOnlineClothing();
 </script></html>
 
