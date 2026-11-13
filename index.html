@@ -18,7 +18,7 @@
 .guide-caption { font-size: 11px; color: #becab5; margin: 6px 0; }
 </style>
 <header><div><div class="eyebrow">AI Director / Source collection</div><h1>Visual Library</h1></div><span class="badge">Private imports · Browser workspace</span></header>
-<main><section><div class="eyebrow">01 / Choose your references</div><h2>Every scene starts with a source.</h2><p>Select a character, then add your outfit, pose and location images. Click a selected card again to inspect it.</p><label class="upload">Load private character library<input id="loadCharacter" type="file" accept="application/json"></label><p class="hint">Choose your private character library file on this device. Use Restore library to load your wardrobe, poses and saved scene.</p><nav id="tabs" aria-label="Reference categories"></nav><div class="toolbar"><span id="count"></span><label class="upload" id="importLabel">+ Add images<input id="files" type="file" accept="image/png,image/jpeg,image/webp" multiple></label></div><div id="gallery" class="grid"></div><h2>Master identity references</h2><p id="hierarchy"></p><div id="identity" class="grid"></div><fieldset class="scene-view">
+<main><section><div class="eyebrow">01 / Choose your references</div><h2>Every scene starts with a source.</h2><p>Select a character, then add your outfit, pose and location images. Click a selected card again to inspect it.</p><label class="upload">Load private character library<input id="loadCharacter" type="file" accept="application/json"></label><p class="hint">Choose your private character library file on this device. Use Restore library to load your wardrobe, poses and saved scene.</p><nav id="tabs" aria-label="Reference categories"></nav><div class="toolbar"><span id="count"></span><label class="upload" id="importLabel">+ Add images<input id="files" type="file" accept="image/png,image/jpeg,image/webp" multiple></label></div><p id="clothingLibraryInfo" class="hint" hidden>Online clothing library. <a href="https://github.com/determinedtoexceed-lgtm/AI-Media-Studio/tree/main/clothing" target="_blank" rel="noopener" style="color:#d0e3a8">Manage clothing folder on GitHub</a>. Add images there and list them in catalog.json for permanent availability. Add images above imports privately for this session.</p><div id="gallery" class="grid"></div><h2>Master identity references</h2><p id="hierarchy"></p><div id="identity" class="grid"></div><fieldset class="scene-view">
 <legend>Face emotion</legend>
 <label for="faceEmotion">Expression</label>
 <select id="faceEmotion">
@@ -248,7 +248,7 @@ function sceneViewPrompt() {
 
 function preview(a){$('previewTitle').textContent=a.name;$('previewImage').src=a.src;$('previewImage').alt=a.name;$('preview').showModal()}
 function card(a,action,isSelected=false){const b=document.createElement('button');b.className='card'+(isSelected?' selected':'');b.setAttribute('aria-pressed',String(isSelected));const i=new Image();i.src=a.src;i.alt=a.name;const s=document.createElement('strong');s.textContent=a.name;const d=document.createElement('small');d.textContent=a.detail||'Click to select · click again to preview';b.append(i,s,d);b.onclick=action;return b}
-function render(){ $('tabs').replaceChildren();kinds.forEach(k=>{const b=document.createElement('button');b.textContent=k;b.setAttribute('aria-pressed',String(k===active));b.onclick=()=>{active=k;render()};$('tabs').append(b)});$('count').textContent=assets[active].length+' '+active.toLowerCase();$('importLabel').hidden=active==='Characters';$('gallery').replaceChildren();assets[active].forEach(a=>$('gallery').append(card(a,()=>{if(selected[active]===a.id)preview(a);else{selected[active]=a.id;render()}},selected[active]===a.id)));if(!assets[active].length){const e=document.createElement('div');e.className='empty';e.textContent='Your '+active.toLowerCase()+' collection is ready for images. Add PNG, JPEG or WebP files above.';$('gallery').append(e)}$('selections').replaceChildren();kinds.slice(0,4).forEach(k=>{const a=assets[k].find(x=>x.id===selected[k]);const row=document.createElement('div');row.className='slot';if(a){const im=new Image();im.src=a.src;im.alt=a.name;row.append(im)}const t=document.createElement('span');const sm=document.createElement('small');sm.textContent=k;t.append(sm,document.createTextNode(a?a.name:'Nothing selected'));row.append(t);if(a){const b=document.createElement('button');b.textContent='×';b.setAttribute('aria-label','Clear '+k);b.onclick=()=>{delete selected[k];render()};row.append(b)}$('selections').append(row)})}
+function render(){ $('tabs').replaceChildren();kinds.forEach(k=>{const b=document.createElement('button');b.textContent=k;b.setAttribute('aria-pressed',String(k===active));b.onclick=()=>{active=k;render()};$('tabs').append(b)});$('clothingLibraryInfo').hidden=active!=='Wardrobe';$('count').textContent=assets[active].length+' '+active.toLowerCase();$('importLabel').hidden=active==='Characters';$('gallery').replaceChildren();assets[active].forEach(a=>$('gallery').append(card(a,()=>{if(selected[active]===a.id)preview(a);else{selected[active]=a.id;render()}},selected[active]===a.id)));if(!assets[active].length){const e=document.createElement('div');e.className='empty';e.textContent='Your '+active.toLowerCase()+' collection is ready for images. Add PNG, JPEG or WebP files above.';$('gallery').append(e)}$('selections').replaceChildren();kinds.slice(0,4).forEach(k=>{const a=assets[k].find(x=>x.id===selected[k]);const row=document.createElement('div');row.className='slot';if(a){const im=new Image();im.src=a.src;im.alt=a.name;row.append(im)}const t=document.createElement('span');const sm=document.createElement('small');sm.textContent=k;t.append(sm,document.createTextNode(a?a.name:'Nothing selected'));row.append(t);if(a){const b=document.createElement('button');b.textContent='×';b.setAttribute('aria-label','Clear '+k);b.onclick=()=>{delete selected[k];render()};row.append(b)}$('selections').append(row)})}
 function renderCharacter() {
     assets.Characters = [{id: catalog.character.character_id, name: catalog.character.name, src: originals[0]}];
     $('hierarchy').textContent = catalog.character.name + ' · ' + catalog.character.character_id + ' · A: face / B: body / C: orientation';
@@ -304,4 +304,40 @@ $('save').onclick=async()=>{download('ai-director-library.json',{format:'ai-dire
 $('restore').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;if(f.size>150*1024*1024)throw Error('Backup exceeds 150 MB');const b=JSON.parse(await f.text());if(b.format!=='ai-director-library-v1')throw Error('Unrecognized backup');for(const k of kinds.slice(1)){if(!Array.isArray(b.assets[k]))throw Error('Missing '+k);for(const a of b.assets[k]){if(typeof a.name!=='string'||typeof a.id!=='string'||typeof a.src!=='string'||!/^data:image\/(png|jpeg|webp);base64,/.test(a.src))throw Error('Invalid image');await decode(a.src)}}const restoredEmotion=await validateFaceEmotion(b.face_emotion);for(const k of kinds.slice(1))assets[k]=b.assets[k];for(const k of kinds)delete selected[k];for(const k of kinds){if(assets[k].some(a=>a.id===b.selected?.[k]))selected[k]=b.selected[k]}$('notes').value=typeof b.notes==='string'?b.notes:'';restoreSceneView(b.view);$('faceEmotion').value=restoredEmotion.expression;$('emotionNotes').value=restoredEmotion.details;emotionReference=restoredEmotion.reference;renderEmotionReference();render();status('Library restored.')}catch(err){status('Restore failed: '+err.message)}e.target.value=''};
 $('export').onclick=()=>{if(!selected.Characters || !originals.length){status('Load and select your character first.');return}const images=catalog.references.map((r,i)=>({...r,data_url:originals[i]}));for(const k of kinds.slice(1,4)){const a=assets[k].find(a=>a.id===selected[k]);if(a)images.push({role:k,name:a.name,data_url:a.src})}if(emotionReference)images.push({role:'Face emotion',name:emotionReference.name,data_url:emotionReference.src});const prompt=catalog.master_prompt+'\n\n'+catalog.face_lock.replace('[CHARACTER_NAME]',catalog.character.name).replace('[CHARACTER_ID]',catalog.character.character_id).replace(/\[(LOCATION|OUTFIT|ACTION|EXPRESSION|HAIRSTYLE|LIGHTING|CAMERA|ASPECT_RATIO|NOTES)\]/g,'See selected reference images and user scene direction; otherwise unspecified')+'\n\nUSER SCENE DIRECTION\n'+($('notes').value||'No additional scene direction supplied.')+sceneViewPrompt()+faceEmotionPrompt()+'\n\nSELECTED VISUAL REFERENCES\n'+images.map(a=>a.role+': '+a.name).join('\n');download('scene-'+catalog.character.character_id+'.json',{format:'ai-director-scene-v1',character:catalog.character,master_prompt:catalog.master_prompt,prompt,images,view:sceneView(),face_emotion:faceEmotion(),generation_status:'NOT_RUN',identity_review:'QA_PENDING'});status('Scene file ready. Choose where to save it in the export window. No generation has run.')};
 render();
+
+async function loadOnlineClothing() {
+    try {
+        const response = await fetch('clothing/catalog.json', { cache: 'no-cache' });
+        if (!response.ok) throw Error('Clothing catalog could not be loaded');
+        const catalog = await response.json();
+        if (!Array.isArray(catalog.items)) throw Error('Invalid clothing catalog');
+        let failed = 0;
+        for (const item of catalog.items) {
+            try {
+                if (typeof item.name !== 'string' || typeof item.file !== 'string'
+                    || !/^[a-zA-Z0-9][a-zA-Z0-9 _./-]*\.(png|jpe?g|webp)$/i.test(item.file)
+                    || item.file.split('/').includes('..')) {
+                    throw Error('Invalid clothing entry');
+                }
+                const id = 'online-clothing:' + item.file;
+                if (assets.Wardrobe.some(asset => asset.id === id)) continue;
+                const imageResponse = await fetch('clothing/' + encodeURI(item.file));
+                if (!imageResponse.ok) throw Error('Clothing image unavailable');
+                const blob = await imageResponse.blob();
+                if (blob.size > 20 * 1024 * 1024) throw Error('Clothing image exceeds 20 MB');
+                const src = await data(blob);
+                await decode(src);
+                assets.Wardrobe.push({ id, name: item.name, src, detail: 'Online clothing · click to select' });
+            } catch (error) {
+                failed++;
+            }
+        }
+        render();
+        if (failed) status(failed + ' online clothing image(s) could not be loaded. Check the clothing catalog.');
+    } catch (error) {
+        status('Online clothing unavailable: ' + error.message + '. You can still add images from your device.');
+    }
+}
+loadOnlineClothing();
 </script></html>
+
